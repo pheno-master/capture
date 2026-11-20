@@ -2,8 +2,8 @@
 # quality. Five views on the arm's side of the plant, all within ~0.2 m of the
 # shoulder of a table-mounted JetCobot.
 #
-#   ros2 run plant_capture scan --config config/scan_smoke_test.yaml --plan-only
-#   ros2 run plant_capture scan --config config/scan_smoke_test.yaml
+#   ros2 run capture scan --config config/scan_smoke_test.yaml --plan-only
+#   ros2 run capture scan --config config/scan_smoke_test.yaml
 #
 # Azimuth is measured around the plant centre: 0° points away from the arm
 # (+x of the base frame), so 140–220° is the side facing the arm.

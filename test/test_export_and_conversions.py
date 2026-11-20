@@ -4,12 +4,12 @@ import numpy as np
 import pytest
 
 from fakes import MemoryImageWriter
-from plant_capture.core.dataset_reader import load_dataset
-from plant_capture.core.dataset_writer import DatasetWriter
-from plant_capture.core.geometry import look_at, make_transform, quat_to_matrix
-from plant_capture.core.model import CapturedFrame, Intrinsics
-from plant_capture.ros import msg_conversions as mc
-from plant_capture.tools.export_colmap import camera_line, export
+from capture.core.dataset_reader import load_dataset
+from capture.core.dataset_writer import DatasetWriter
+from capture.core.geometry import look_at, make_transform, quat_to_matrix
+from capture.core.model import CapturedFrame, Intrinsics
+from capture.ros import msg_conversions as mc
+from capture.tools.export_colmap import camera_line, export
 
 
 def test_colmap_export_recovers_poses(tmp_path, intrinsics):

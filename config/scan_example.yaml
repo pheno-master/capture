@@ -1,6 +1,6 @@
 # Static hemisphere scan of one plant (condition A).
-# Run:  ros2 run plant_capture scan --config config/scan_example.yaml
-# Plan only (no robot needed):  ros2 run plant_capture scan --config ... --plan-only
+# Run:  ros2 run capture scan --config config/scan_example.yaml
+# Plan only (no robot needed):  ros2 run capture scan --config ... --plan-only
 
 output_root: /home/jetson/scans
 plant_id: plant01

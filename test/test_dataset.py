@@ -4,11 +4,11 @@ import numpy as np
 import pytest
 
 from fakes import MemoryImageWriter
-from plant_capture.core import schema
-from plant_capture.core.dataset_reader import load_dataset
-from plant_capture.core.dataset_writer import DatasetWriter
-from plant_capture.core.image_io import Cv2ImageWriter
-from plant_capture.core.model import CapturedFrame, FrameRecord, ScanSummary, ViewFailure
+from capture.core import schema
+from capture.core.dataset_reader import load_dataset
+from capture.core.dataset_writer import DatasetWriter
+from capture.core.image_io import Cv2ImageWriter
+from capture.core.model import CapturedFrame, FrameRecord, ScanSummary, ViewFailure
 
 
 def captured(pose, stamp=1.0):

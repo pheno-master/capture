@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from plant_capture.core.views import HemisphereSpec, azimuths_deg, hemisphere_views, serpentine
+from capture.core.views import HemisphereSpec, azimuths_deg, hemisphere_views, serpentine
 
 
 def spec(**kw) -> HemisphereSpec:

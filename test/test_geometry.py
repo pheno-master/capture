@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from plant_capture.core.geometry import (
+from capture.core.geometry import (
     camera_target_to_ee_target, is_rigid, look_at, make_transform, matrix_to_quat, quat_to_matrix, rigid_inverse
 )
 

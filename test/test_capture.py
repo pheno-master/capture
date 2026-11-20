@@ -2,8 +2,8 @@ import numpy as np
 import pytest
 
 from fakes import FakeClock, FakeImageSource, FakeJoints, FakePoseSource
-from plant_capture.core.capture import CaptureSettings, FrameCapturer
-from plant_capture.core.model import CapturedFrame, CaptureFailure, StampedPose
+from capture.core.capture import CaptureSettings, FrameCapturer
+from capture.core.model import CapturedFrame, CaptureFailure, StampedPose
 
 
 def make_capturer(pose_source, clock=None, images=None, **settings):

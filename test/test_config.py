@@ -2,8 +2,8 @@ from datetime import datetime
 
 import pytest
 
-from plant_capture.core.config import RosSettings, ScanConfig, build_dataclass, load_config, scan_dir_name, scan_metadata
-from plant_capture.core.views import hemisphere_views
+from capture.core.config import RosSettings, ScanConfig, build_dataclass, load_config, scan_dir_name, scan_metadata
+from capture.core.views import hemisphere_views
 
 
 def test_example_config_is_valid(example_config_path):

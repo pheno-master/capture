@@ -8,7 +8,7 @@ from typing import Callable
 
 import numpy as np
 
-from plant_capture.core.model import CapturedFrame, StampedImage, StampedPose, ViewFailure
+from capture.core.model import CapturedFrame, StampedImage, StampedPose, ViewFailure
 
 
 class FakeClock:

@@ -10,7 +10,7 @@ from forward kinematics, and writes a scan folder for the Go reconstruction
 The package is split into a **ROS-free core** and **thin ROS adapters**.
 
 ```
-plant_capture/
+capture/
   core/                  pure Python + numpy; fully unit-tested
     geometry.py          transforms, look_at, quaternions, hand–eye target
     model.py             data types (Intrinsics, CapturedFrame, FrameRecord, ScanSummary, ...)
