@@ -39,3 +39,6 @@ ros:
   joint_states_topic: /joint_states
   tf_timeout_s: 0.5
   mover: move_group                     # talks to the move_group started by demo.launch.py
+  arm_joints: [1_Joint, 2_Joint, 3_Joint, 4_Joint, 5_Joint, 6_Joint]
+  ik_attempts: 10
+  ik_timeout_s: 0.05
