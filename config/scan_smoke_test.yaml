@@ -13,11 +13,11 @@ plant_id: smoke_test
 notes: "table-mounted arm, smoke test of capture and dataset writing"
 
 views:
-  center: [0.22, 0.0, 0.10]       # point to look at, in the base frame (m): measure it
-  radius: 0.12                     # small, so every view stays reachable
-  elevations_deg: [40, 65]
-  views_per_ring: [3, 2]
-  azimuth_range_deg: [140, 220]    # arm side only
+  center: [0.22, 0.0, 0.10]
+  radius: 0.15
+  elevations_deg: [70, 85]
+  views_per_ring: [6, 3]
+  azimuth_range_deg: [120, 270]
   up: [0, 0, 1]
   serpentine: true
 
