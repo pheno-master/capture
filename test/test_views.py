@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from capture.core.views import HemisphereSpec, azimuths_deg, hemisphere_views, serpentine
+from capture.core.views import HemisphereSpec, azimuths_deg, hemisphere_views, serpentine, shell_poses
 
 
 def spec(**kw) -> HemisphereSpec:
@@ -51,3 +51,12 @@ def test_views_per_ring_per_elevation():
 def test_invalid_radius():
     with pytest.raises(ValueError):
         spec(radius=0)
+
+
+def test_shell_poses_grid_shape_and_distance():
+    center = (0.2, 0.0, 0.1)
+    grid = shell_poses(center, 0.3, [15, 45, 75], [0, 90, 180, 270])
+    assert len(grid) == 3 and all(len(row) == 4 for row in grid)
+    for row in grid:
+        for T in row:
+            assert np.isclose(np.linalg.norm(T[:3, 3] - np.array(center)), 0.3)

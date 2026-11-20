@@ -25,7 +25,7 @@ from ..core.image_io import Cv2ImageWriter
 from ..core.geometry import camera_target_to_ee_target
 from ..core.motion import RollSearchMover, roll_about_optical_axis
 from ..core.session import ScanSession
-from ..core.views import hemisphere_views
+from ..core.views import hemisphere_views, shell_poses
 from .clock import RosClock
 from .image_source import RosImageSource
 from .joint_source import RosJointSource
@@ -40,6 +40,8 @@ def parse_args(argv: list[str] | None) -> argparse.Namespace:
     p.add_argument("--plan-only", action="store_true", help="print the planned camera positions and exit")
     p.add_argument("--check-reach", action="store_true",
                    help="test every view with inverse kinematics only (the arm does not move) and exit")
+    p.add_argument("--reach-map", action="store_true",
+                   help="map which camera positions around views.center the arm can reach (no motion) and exit")
     return p.parse_args(argv)
 
 
@@ -62,7 +64,7 @@ def wait_for(fn, what: str, timeout_s: float, clock: RosClock):
     raise RuntimeError(f"timed out waiting for {what}")
 
 
-def build_ik(node: Node, cfg: ScanConfig):
+def build_ik(node: Node, cfg: ScanConfig, attempts: int | None = None):
     """IK client for the move_group mover, or None if no arm joints are configured."""
     r = cfg.ros
     if not r.arm_joints:
@@ -70,7 +72,7 @@ def build_ik(node: Node, cfg: ScanConfig):
     from .ik_client import IkClient
 
     ik = IkClient(node, r.planning_group, r.ee_link, r.base_frame, tuple(r.arm_joints),
-                  attempts=r.ik_attempts, timeout_s=r.ik_timeout_s)
+                  attempts=attempts or r.ik_attempts, timeout_s=r.ik_timeout_s)
     if not ik.wait_for_service(STARTUP_TIMEOUT_S):
         raise RuntimeError("no /compute_ik service: is move_group running?")
     return ik
@@ -94,19 +96,17 @@ def build_mover(node: Node, cfg: ScanConfig, T_ee_cam: np.ndarray):
     return MoveItMover(moveit, r.planning_group, r.ee_link, r.base_frame, T_ee_cam, node.get_logger())
 
 
-def check_reach(node: Node, cfg: ScanConfig) -> None:
-    """Report which views (and which rolls) have an IK solution, without moving.
-    The camera's current pose is tested first: it must be reachable, so a
-    failure there means a setup problem (frames, joint names), not geometry."""
+def _reach_tester(node: Node, cfg: ScanConfig, attempts: int | None = None):
+    """Returns (reachable(T_world_cam) -> bool, current camera pose)."""
     if not cfg.ros.arm_joints:
-        raise RuntimeError("--check-reach needs ros.arm_joints in the config")
+        raise RuntimeError("reach checks need ros.arm_joints in the config")
     clock = RosClock(node)
     poses = TfPoseSource(node, cfg.ros.base_frame, cfg.ros.camera_frame, cfg.ros.tf_timeout_s)
     T_ee_cam = wait_for(lambda: poses.static_transform(cfg.ros.ee_link, cfg.ros.camera_frame),
                         f"tf {cfg.ros.ee_link} <- {cfg.ros.camera_frame}", STARTUP_TIMEOUT_S, clock)
     T_now = wait_for(lambda: poses.static_transform(cfg.ros.base_frame, cfg.ros.camera_frame),
                      f"tf {cfg.ros.base_frame} <- {cfg.ros.camera_frame}", STARTUP_TIMEOUT_S, clock)
-    ik = build_ik(node, cfg)
+    ik = build_ik(node, cfg, attempts)
 
     def reachable(T_world_cam: np.ndarray) -> bool:
         return ik.solve(camera_target_to_ee_target(T_world_cam, T_ee_cam)) is not None
@@ -115,16 +115,53 @@ def check_reach(node: Node, cfg: ScanConfig) -> None:
     print(f"sanity check, current camera pose: {'OK' if sanity else 'FAILED'}")
     if not sanity:
         print("  -> IK cannot even reach the pose the arm is in now: check arm_joints, ee_link, base_frame")
+    return reachable, T_now
+
+
+def _reachable_any_roll(reachable, T: np.ndarray, rolls) -> list[bool]:
+    return [reachable(roll_about_optical_axis(T, r)) for r in rolls]
+
+
+def check_reach(node: Node, cfg: ScanConfig) -> None:
+    """Report which planned views (and which rolls) have an IK solution."""
+    reachable, _ = _reach_tester(node, cfg)
     rolls = cfg.motion.roll_candidates_deg
     views = hemisphere_views(cfg.views)
     print(f"\n{'view':>4}  {'position (m)':^26}  " + "  ".join(f"{r:>5.0f}°" for r in rolls))
     total = 0
     for i, T in enumerate(views):
-        hits = [reachable(roll_about_optical_axis(T, r)) for r in rolls]
+        hits = _reachable_any_roll(reachable, T, rolls)
         total += any(hits)
         x, y, z = T[:3, 3]
         print(f"{i:4d}  ({x:+.3f}, {y:+.3f}, {z:+.3f})  " + "  ".join(f"{'yes' if h else '-':>6}" for h in hits))
     print(f"\n{total}/{len(views)} views reachable with at least one roll")
+
+
+REACH_MAP_RADII = (0.10, 0.15, 0.20, 0.25, 0.30)
+REACH_MAP_ELEVATIONS = (85, 70, 55, 40, 25, 10)
+REACH_MAP_AZIMUTHS = tuple(range(0, 360, 30))
+REACH_MAP_IK_ATTEMPTS = 3  # fewer than a scan: the map tests up to 360 positions x 4 rolls
+
+
+def reach_map(node: Node, cfg: ScanConfig) -> None:
+    """For each radius, a grid of elevation x azimuth around views.center:
+    '#' = the camera can be placed there looking at the centre (any roll)."""
+    reachable, _ = _reach_tester(node, cfg, REACH_MAP_IK_ATTEMPTS)
+    rolls = cfg.motion.roll_candidates_deg
+    c = cfg.views.center
+    print(f"\nreach map around centre ({c[0]:+.3f}, {c[1]:+.3f}, {c[2]:+.3f}) m in {cfg.ros.base_frame}")
+    print("azimuth 0° = +x (away from the arm), 180° = towards the arm; '#' reachable, '.' not\n")
+    header = "elev \\ azim " + " ".join(f"{a:>3d}" for a in REACH_MAP_AZIMUTHS)
+    for radius in REACH_MAP_RADII:
+        grid = shell_poses(c, radius, REACH_MAP_ELEVATIONS, REACH_MAP_AZIMUTHS, cfg.views.up)
+        print(f"radius {radius:.2f} m")
+        print(header)
+        count = 0
+        for el, row in zip(REACH_MAP_ELEVATIONS, grid):
+            marks = ["#" if any(_reachable_any_roll(reachable, T, rolls)) else "." for T in row]
+            count += marks.count("#")
+            print(f"{el:>9d}°  " + " ".join(f"{m:>3}" for m in marks))
+        print(f"  {count} reachable\n", flush=True)
 
 
 def run_scan(node: Node, cfg: ScanConfig) -> Path:
@@ -169,7 +206,9 @@ def main(argv: list[str] | None = None) -> None:
     spinner = threading.Thread(target=executor.spin, daemon=True)  # callbacks run here
     spinner.start()
     try:
-        if args.check_reach:
+        if args.reach_map:
+            reach_map(node, cfg)
+        elif args.check_reach:
             check_reach(node, cfg)
         else:
             run_scan(node, cfg)

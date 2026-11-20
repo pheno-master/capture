@@ -80,3 +80,13 @@ def hemisphere_views(spec: HemisphereSpec) -> list[Matrix4]:
     if spec.serpentine:
         return serpentine(rings)
     return [pose for ring in rings for pose in ring]
+
+
+def shell_poses(center: Sequence[float], radius: float, elevations_deg: Sequence[float],
+                azimuths: Sequence[float], up: Sequence[float] = (0.0, 0.0, 1.0)) -> list[list[Matrix4]]:
+    """Camera poses on a grid over one spherical shell, all looking at
+    `center`: one row per elevation, one column per azimuth. Used to map where
+    the arm can place the camera before choosing a view plan."""
+    c = np.asarray(center, float)
+    u = np.asarray(up, float)
+    return [[look_at(point_on_sphere(c, radius, az, el), c, u) for az in azimuths] for el in elevations_deg]
