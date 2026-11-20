@@ -30,6 +30,9 @@ class RosSettings:
     joint_states_topic: str = "/joint_states"
     tf_timeout_s: float = 0.5
     mover: str = "move_group"  # "move_group" (action to a running move_group) or "moveit_py"
+    arm_joints: tuple[str, ...] = ()  # joints of planning_group; enables IK + joint goals (move_group mover)
+    ik_attempts: int = 10  # first from the current state, the rest from random seeds
+    ik_timeout_s: float = 0.05
 
     def __post_init__(self) -> None:
         if self.mover not in ("move_group", "moveit_py"):
