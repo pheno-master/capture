@@ -4,7 +4,7 @@
   <name>capture</name>
   <version>0.1.0</version>
   <description>Image and pose acquisition for arm-based 3D plant reconstruction.</description>
-  <maintainer email="erlenrom@ntnu.no">Erlend Rømo</maintainer>
+  <maintainer email="erlenrom@ntnu.com">Erlend Rømo</maintainer>
   <license>MIT</license>
 
   <exec_depend>rclpy</exec_depend>
@@ -12,7 +12,9 @@
   <exec_depend>geometry_msgs</exec_depend>
   <exec_depend>tf2_ros</exec_depend>
   <exec_depend>cv_bridge</exec_depend>
-  <exec_depend>moveit_py</exec_depend>
+  <exec_depend>moveit_msgs</exec_depend>
+  <exec_depend>shape_msgs</exec_depend>
+  <!-- moveit_py is optional: only needed with ros.mover: moveit_py -->
   <exec_depend>python3-numpy</exec_depend>
   <exec_depend>python3-opencv</exec_depend>
   <exec_depend>python3-yaml</exec_depend>

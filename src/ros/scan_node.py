@@ -1,4 +1,4 @@
-"""Entry point: `ros2 run plant_capture scan --config config/scan.yaml`.
+"""Entry point: `ros2 run capture scan --config config/scan.yaml`.
 
 This is the composition root: the only place where concrete ROS adapters are
 created and wired into the ROS-free core. Everything it calls is tested
@@ -28,7 +28,6 @@ from ..core.views import hemisphere_views
 from .clock import RosClock
 from .image_source import RosImageSource
 from .joint_source import RosJointSource
-from .moveit_mover import MoveItMover
 from .tf_pose_source import TfPoseSource
 
 STARTUP_TIMEOUT_S = 10.0
@@ -60,9 +59,24 @@ def wait_for(fn, what: str, timeout_s: float, clock: RosClock):
     raise RuntimeError(f"timed out waiting for {what}")
 
 
-def run_scan(node: Node, cfg: ScanConfig) -> Path:
-    from moveit.planning import MoveItPy  # imported here: only needed on the robot
+def build_mover(node: Node, cfg: ScanConfig, T_ee_cam: np.ndarray):
+    """The robot-specific motion backend, chosen by ros.mover in the config."""
+    r = cfg.ros
+    if r.mover == "move_group":
+        from .move_group_mover import MoveGroupMover
 
+        mover = MoveGroupMover(node, r.planning_group, r.ee_link, r.base_frame, T_ee_cam)
+        if not mover.wait_for_server(STARTUP_TIMEOUT_S):
+            raise RuntimeError("no MoveGroup action server: is move_group (e.g. demo.launch.py) running?")
+        return mover
+    from moveit.planning import MoveItPy  # only needed for the moveit_py backend
+
+    
+    moveit = MoveItPy(node_name=f"{node.get_name()}_moveit")
+    return MoveItMover(moveit, r.planning_group, r.ee_link, r.base_frame, T_ee_cam, node.get_logger())
+
+
+def run_scan(node: Node, cfg: ScanConfig) -> Path:
     clock = RosClock(node)
     images = RosImageSource(node, cfg.ros.image_topic, cfg.ros.camera_info_topic)
     poses = TfPoseSource(node, cfg.ros.base_frame, cfg.ros.camera_frame, cfg.ros.tf_timeout_s)
@@ -75,11 +89,7 @@ def run_scan(node: Node, cfg: ScanConfig) -> Path:
                                     f"hand–eye tf {cfg.ros.ee_link} <- {cfg.ros.camera_frame}",
                                     STARTUP_TIMEOUT_S, clock)
 
-    moveit = MoveItPy(node_name=f"{node.get_name()}_moveit")
-    mover = RollSearchMover(
-        MoveItMover(moveit, cfg.ros.planning_group, cfg.ros.ee_link, cfg.ros.base_frame, T_ee_cam, node.get_logger()),
-        cfg.motion.roll_candidates_deg,
-    )
+    mover = RollSearchMover(build_mover(node, cfg, T_ee_cam), cfg.motion.roll_candidates_deg)
     capturer = FrameCapturer(images, poses, joints, clock, cfg.capture)
 
     created = datetime.now()

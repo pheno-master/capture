@@ -1,0 +1,41 @@
+# Smoke test: checks that capture and dataset writing work, not reconstruction
+# quality. Five views on the arm's side of the plant, all within ~0.2 m of the
+# shoulder of a table-mounted JetCobot.
+#
+#   ros2 run plant_capture scan --config config/scan_smoke_test.yaml --plan-only
+#   ros2 run plant_capture scan --config config/scan_smoke_test.yaml
+#
+# Azimuth is measured around the plant centre: 0° points away from the arm
+# (+x of the base frame), so 140–220° is the side facing the arm.
+
+output_root: /home/jetson/scans
+plant_id: smoke_test
+notes: "table-mounted arm, smoke test of capture and dataset writing"
+
+views:
+  center: [0.22, 0.0, 0.10]       # point to look at, in the base frame (m): measure it
+  radius: 0.12                     # small, so every view stays reachable
+  elevations_deg: [40, 65]
+  views_per_ring: [3, 2]
+  azimuth_range_deg: [140, 220]    # arm side only
+  up: [0, 0, 1]
+  serpentine: true
+
+capture:
+  settle_time_s: 0.5
+  image_timeout_s: 2.0
+  max_sync_dt_s: 0.05
+
+motion:
+  roll_candidates_deg: [0, 90, -90, 180]
+
+ros:
+  base_frame: dummy                     # root of the JetCobot model; confirm with view_frames
+  camera_frame: camera_optical_frame    # published by the static transforms (step 5)
+  ee_link: 6_Link                       # parent link of the gripper in the SRDF
+  planning_group: arm_group
+  image_topic: /image_raw               # usb_cam defaults
+  camera_info_topic: /camera_info
+  joint_states_topic: /joint_states
+  tf_timeout_s: 0.5
+  mover: move_group                     # talks to the move_group started by demo.launch.py

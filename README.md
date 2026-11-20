@@ -1,6 +1,6 @@
-# plant_capture
+# Capture
 
-ROS 2 (Jazzy) Python package that moves the JetCobot through a static
+ROS 2 (Humble or Jazzy) Python package that moves the JetCobot through a static
 hemisphere of camera poses, captures one image per pose with the camera pose
 from forward kinematics, and writes a scan folder for the Go reconstruction
 (`plantrecon`) and the COLMAP + 3DGS baseline.
@@ -28,7 +28,8 @@ src/
     image_source.py      Image + CameraInfo subscriptions
     tf_pose_source.py    camera pose from tf2 (FK + static hand–eye)
     joint_source.py      JointState subscription
-    moveit_mover.py      MoveIt 2 (moveit_py) motion
+    move_group_mover.py  MoveIt 2 motion via the MoveGroup action (default)
+    moveit_mover.py      MoveIt 2 motion via moveit_py (optional)
     clock.py             ROS clock
     msg_conversions.py   message ↔ core types (no rclpy import, unit-tested)
     scan_node.py         composition root / entry point
@@ -66,16 +67,17 @@ quaternions are (x, y, z, w) in ROS order. Images are BGR uint8 (OpenCV).
   `camera_link → camera_optical_frame` rotation as well.
 - The camera driver publishing `Image` and `CameraInfo` with a `plumb_bob`
   distortion model (from `camera_calibration`).
-- MoveIt 2 with `moveit_py` and its parameters loaded (normally via a launch
-  file using `moveit_configs_utils`).
+- A running `move_group` (e.g. the robot's `demo.launch.py`) for the default
+  `ros.mover: move_group`. The optional `moveit_py` backend instead needs
+  `moveit_py` and its parameters loaded via a launch file.
 
 ## Usage
 
 ```sh
-colcon build --packages-select plant_capture && source install/setup.bash
-ros2 run plant_capture scan --config src/plant_capture/config/scan_example.yaml --plan-only
-ros2 run plant_capture scan --config src/plant_capture/config/scan_example.yaml
-ros2 run plant_capture export_colmap /path/to/scan_dir /path/to/colmap/sparse/0
+colcon build --packages-select capture && source install/setup.bash
+ros2 run capture scan --config src/capture/config/scan_example.yaml --plan-only
+ros2 run capture scan --config src/capture/config/scan_example.yaml
+ros2 run capture export_colmap /path/to/scan_dir /path/to/colmap/sparse/0
 ```
 
 Then check the scan with the Go tool before anything else:
@@ -94,7 +96,7 @@ python3 -m pytest test
 
 ## Things to check on the Jetson
 
-- `MoveItMover._execute`: the `MoveItPy.execute` signature differs between
-  MoveIt releases; keep the call that matches your installation.
+- `MoveItMover._execute` (only with `ros.mover: moveit_py`): the
+  `MoveItPy.execute` signature differs between MoveIt releases.
 - `RosSettings` defaults (`ee_link`, `planning_group`, topics, frames) are
   placeholders: set them to your JetCobot's names in the YAML.

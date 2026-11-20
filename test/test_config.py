@@ -35,3 +35,8 @@ def test_metadata_and_dir_name(example_config_path):
     meta = scan_metadata(cfg, t)
     assert meta["created"] == "2026-11-20T14:03:12"
     assert meta["config"]["views"]["radius"] == cfg.views.radius
+
+
+def test_invalid_mover_rejected():
+    with pytest.raises(ValueError, match="ros.mover"):
+        RosSettings(mover="teleport")

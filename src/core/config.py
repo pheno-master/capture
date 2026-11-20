@@ -29,6 +29,11 @@ class RosSettings:
     camera_info_topic: str = "/camera/camera_info"
     joint_states_topic: str = "/joint_states"
     tf_timeout_s: float = 0.5
+    mover: str = "move_group"  # "move_group" (action to a running move_group) or "moveit_py"
+
+    def __post_init__(self) -> None:
+        if self.mover not in ("move_group", "moveit_py"):
+            raise ValueError(f"ros.mover must be 'move_group' or 'moveit_py', got {self.mover!r}")
 
 
 @dataclass(frozen=True)
