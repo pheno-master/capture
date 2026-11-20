@@ -1,0 +1,50 @@
+# Test: three rings around the real (artificial) plant, table-mounted arm.
+#
+# Do these in order, all without the arm touching the plant:
+#   1. Measure the middle of the canopy in the base frame and set views.center.
+#   2. ros2 run capture scan --config <this file> --reach-map
+#      -> choose radius / elevations / azimuth range from the '#' cells
+#   3. ros2 run capture scan --config <this file> --check-reach
+#      -> every view should have at least one 'yes'
+#   4. ros2 run capture scan --config <this file>      (hand on the power switch)
+#
+# MoveIt does not know the plant is there: it plans motions that avoid the
+# arm itself, not the leaves. Keep the radius large enough that the camera
+# stays outside the canopy (leaf tips are ~0.2 m from the stem).
+#
+# Azimuth 0° points away from the arm (+x of the base frame), 180° towards it.
+
+output_root: /home/jetson/scans
+plant_id: plant_3rings_test
+notes: "table-mounted arm, three-ring test on the artificial plant"
+
+views:
+  center: [0.20, 0.0, 0.30]        # MEASURE: middle of the canopy, in the base frame (m)
+  radius: 0.28                      # camera distance from the centre; must clear the leaves
+  elevations_deg: [30, 55, 80]      # three rings: low, middle, top
+  views_per_ring: [5, 5, 3]
+  azimuth_range_deg: [120, 240]     # arm side only; widen if the reach map allows
+  up: [0, 0, 1]
+  serpentine: true
+
+capture:
+  settle_time_s: 1.5               # sync_plan follows commanded joints: give the servos time
+  image_timeout_s: 2.0
+  max_sync_dt_s: 0.05
+
+motion:
+  roll_candidates_deg: [0, 90, -90, 180]
+
+ros:
+  base_frame: dummy                # keep the same as in the smoke test
+  camera_frame: camera_optical_frame
+  ee_link: 6_Link
+  planning_group: arm_group
+  image_topic: /image_raw
+  camera_info_topic: /camera_info
+  joint_states_topic: /joint_states
+  tf_timeout_s: 0.5
+  mover: move_group
+  arm_joints: [1_Joint, 2_Joint, 3_Joint, 4_Joint, 5_Joint, 6_Joint]
+  ik_attempts: 10
+  ik_timeout_s: 0.05
