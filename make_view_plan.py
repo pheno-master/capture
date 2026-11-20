@@ -12,8 +12,8 @@ import numpy as np
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-from src.core.config import load_config
-from src.core.views import hemisphere_views, ring_poses
+from plant_capture.core.config import load_config
+from plant_capture.core.views import hemisphere_views, ring_poses
 
 cfg = load_config(config)
 spec = cfg.views

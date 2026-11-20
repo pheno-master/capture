@@ -9,8 +9,8 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from src.core.geometry import look_at  # noqa: E402
-from src.core.model import Intrinsics  # noqa: E402
+from plant_capture.core.geometry import look_at  # noqa: E402
+from plant_capture.core.model import Intrinsics  # noqa: E402
 
 
 @pytest.fixture

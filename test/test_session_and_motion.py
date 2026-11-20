@@ -2,10 +2,10 @@ import numpy as np
 import pytest
 
 from fakes import FakeClock, FakeMover, MemorySink
-from src.core.geometry import look_at
-from src.core.model import CapturedFrame, CaptureFailure
-from src.core.motion import RollSearchMover, roll_about_optical_axis
-from src.core.session import ScanSession
+from plant_capture.core.geometry import look_at
+from plant_capture.core.model import CapturedFrame, CaptureFailure
+from plant_capture.core.motion import RollSearchMover, roll_about_optical_axis
+from plant_capture.core.session import ScanSession
 
 
 class ScriptedCapturer:
