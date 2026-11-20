@@ -1,7 +1,7 @@
 """Abstractions the core depends on (dependency inversion).
 
 Each protocol is deliberately small (interface segregation): the ROS adapters
-in plant_capture.ros implement them for the real robot, and the tests
+in capture.ros implement them for the real robot, and the tests
 implement them with in-memory fakes.
 """
 

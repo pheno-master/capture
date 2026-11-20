@@ -3,7 +3,7 @@
 This feeds the COLMAP + 3DGS baseline the exact same images and poses as the
 Go reconstruction:
 
-    python -m plant_capture.tools.export_colmap scan_dir out_dir/sparse/0
+    python -m capture.tools.export_colmap scan_dir out_dir/sparse/0
     colmap point_triangulator --database_path db.db --image_path scan_dir/frames \
         --input_path out_dir/sparse/0 --output_path out_dir/sparse/tri
 

@@ -1,6 +1,6 @@
-"""Regenerate figures/view_plan.pdf from the plant_capture view planner.
+"""Regenerate figures/view_plan.pdf from the capture view planner.
 
-Usage: python3 make_view_plan.py <path to plant_capture repo> <scan config .yaml> [out stem]
+Usage: python3 make_view_plan.py <path to capture repo> <scan config .yaml> [out stem]
 """
 import sys
 from pathlib import Path

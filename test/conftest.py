@@ -4,7 +4,7 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-# Make `plant_capture` and the `fakes` helper importable without installing.
+# Make `capture` and the `fakes` helper importable without installing.
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
